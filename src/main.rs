@@ -1,5 +1,11 @@
 // use std::vec;
-use std::{thread, time};
+use std::{io::Stdout, thread, time};
+
+use std::io::{stdin, stdout, Write};
+use termion::input::TermRead;
+use termion::raw::IntoRawMode;
+use termion::{event::Key, raw::RawTerminal};
+
 struct GridPiece {
     symble: char,
 }
@@ -29,14 +35,39 @@ type Grid = Vec<Vec<GridPiece>>;
 const BOARDER_CHAR: char = '█';
 
 fn main() {
-    let time_step = time::Duration::from_millis(100);
-    let now = time::Instant::now();
+    // terminal setup
+    let mut stdout = stdout().into_raw_mode().unwrap();
+
+    write!(
+        stdout,
+        // "{}{}q to exit. Type stuff, use alt, and so on.{}",
+        "{}{}q to exit. Type stuff, use alt, and so on.",
+        // "{}q to exit. Type stuff, use alt, and so on.{}",
+        termion::clear::All,
+        termion::cursor::Goto(1, 1),
+        // termion::cursor::Hide
+    )
+    .unwrap();
+    stdout.flush().unwrap();
+
+    //* migrate to ternmion?
+    print!(" \ntest:");
     if let Some((w, h)) = term_size::dimensions() {
-        println!("Width: {}\nHeight: {}", w, h);
+        write!(
+            stdout,
+            "{}Width: {} -- Height: {}",
+            termion::cursor::Goto(1, 2),
+            w,
+            h
+        )
+        .unwrap();
+        stdout.flush().unwrap();
+        // println!();
     } else {
         println!("Unable to get term size :(")
     }
 
+    print!(" \ntest:");
     // let map = Vec::new();
     let size: (usize, usize) = term_size::dimensions().unwrap();
     let dimensions = Dimensions {
@@ -44,6 +75,10 @@ fn main() {
         //* hack to deal with extra prinln when printing
         height: size.1 - 1,
     };
+
+    // time setup
+    let time_step = time::Duration::from_millis(100);
+    let now = time::Instant::now();
 
     let grid = init_grid(&dimensions);
     let world = World {
@@ -53,16 +88,56 @@ fn main() {
 
     // Game loop
     loop {
-        thread::sleep(time_step);
+        let stdin = stdin();
+        for k in stdin.keys() {
+            write!(
+                stdout,
+                "{}{}",
+                termion::cursor::Goto(1, 1),
+                termion::clear::CurrentLine
+            )
+            .unwrap();
+            match k.as_ref().unwrap() {
+                Key::Char('q') => {
+                    write!(stdout, "{}", termion::cursor::Show).unwrap();
+                    return;
+                }
+                Key::Char(c) => println!("{}", c),
+                Key::Alt(c) => println!("^{}", c),
+                Key::Ctrl(c) => println!("*{}", c),
+                Key::Esc => println!("ESC"),
+                Key::Left => println!("←"),
+                Key::Right => println!("→"),
+                Key::Up => println!("↑"),
+                Key::Down => println!("↓"),
+                Key::Backspace => println!("×"),
+                _ => {
+                    println!("{:?}", k)
+                }
+            }
+            stdout.flush().unwrap();
+        }
 
+        return ();
         let mut frame = init_grid(&dimensions);
 
         frame = draw_border(frame);
-        print_frame(frame, &dimensions);
+        // print_frame(frame, &dimensions);
+
+        write!(stdout, "{}", termion::cursor::Goto(5, 5)).unwrap();
+        stdout.flush().unwrap();
+        print!("steven");
+        print!("steven");
+        print!("steven");
+        print!("steven");
+        print!("steven");
+        print!("steven");
+        // print_frame_termion(frame, &dimensions, &mut stdout);
+        thread::sleep(time_step);
     }
 }
 
-fn print_frame(frame: Grid, dimensions: &Dimensions) {
+fn _print_frame(frame: Grid, dimensions: &Dimensions) {
     for row in frame.iter() {
         for column in row.iter() {
             print!("{}", column.symble);
@@ -70,6 +145,26 @@ fn print_frame(frame: Grid, dimensions: &Dimensions) {
         //* extra newline
         println!();
     }
+}
+
+fn print_frame_termion(frame: Grid, dimensions: &Dimensions, stdout: &mut RawTerminal<Stdout>) {
+    println!("stevn");
+    println!("stevn");
+    println!("stevn");
+    println!("stevn");
+    println!("stevn");
+    write!(stdout, "{}{}", termion::cursor::Goto(1, 3), "steven").unwrap();
+    stdout.flush().unwrap();
+    // for row in frame.iter() {
+    //     for column in row.iter() {
+    //         write!(stdout, "{}", BOARDER_CHAR).unwrap();
+    //         stdout.flush().unwrap();
+    //
+    //         print!("{}", column.symble);
+    //     }
+    //     //* extra newline
+    //     println!();
+    // }
 }
 
 fn draw_border(mut frame: Grid) -> Grid {
