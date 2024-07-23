@@ -1,11 +1,24 @@
 // use std::vec;
-use std::{io::Stdout, thread, time};
+use std::{
+    io::{Bytes, Stdout},
+    thread, time,
+};
 
 use std::io::{stdout, Read, Write};
-use termion::async_stdin;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
+use termion::{async_stdin, AsyncReader};
 use termion::{event::Key, raw::RawTerminal};
+
+use std::collections::LinkedList;
+
+enum Move {
+    Left,
+    Right,
+    Up,
+    Down,
+    Exit,
+}
 
 struct GridPiece {
     symble: char,
@@ -27,9 +40,16 @@ struct Location {
     y: u32,
 }
 
+struct SnakeHead {
+    head: Location,
+    direction: Move,
+    body: LinkedList<Location>,
+}
+
 struct World {
     grid: Grid,
     food_loc: Location,
+    snake_head: SnakeHead,
 }
 
 type Grid = Vec<Vec<GridPiece>>;
@@ -81,14 +101,31 @@ fn main() {
     let now = time::Instant::now();
 
     let grid = init_grid(&dimensions);
-    let world = World {
+    let snake_head = SnakeHead {
+        head: Location { x: 5, y: 5 },
+        direction: Move::Up,
+        body: LinkedList::new(),
+    };
+    let mut world = World {
         food_loc: Location { x: 3, y: 3 },
         grid,
+        snake_head,
     };
 
     // Game loop
     loop {
         write!(stdout, "{}", termion::clear::All);
+
+        let action = read_move(&mut stdin);
+
+        if let Some(Move::Exit) = action {
+            return;
+        }
+
+        if let Some(action) = action {
+            world = control_snake(action, world);
+        }
+
         let b = stdin.next();
 
         if let Some(Ok(b'q')) = b {
@@ -118,7 +155,30 @@ fn main() {
     }
 }
 
-fn _print_frame(frame: Grid, dimensions: &Dimensions) {
+fn control_snake(action: Move, world: World) -> World {
+    world
+}
+
+fn read_move(stdin: &mut Bytes<AsyncReader>) -> Option<Move> {
+    let byte = stdin.next();
+
+    if let Some(Ok(_)) = byte {
+        // print!("{:?}", byte);
+
+        match byte.unwrap().unwrap() {
+            b'a' => Some(Move::Left),
+            b's' => Some(Move::Right),
+            b'w' => Some(Move::Up),
+            b'r' => Some(Move::Down),
+            b'q' => Some(Move::Exit),
+            _ => None,
+        }
+    } else {
+        None
+    }
+}
+
+fn _print_frame(frame: Grid, _dimensions: &Dimensions) {
     for row in frame.iter() {
         for column in row.iter() {
             print!("{}", column.symble);
@@ -128,7 +188,7 @@ fn _print_frame(frame: Grid, dimensions: &Dimensions) {
     }
 }
 
-fn print_frame_termion(frame: Grid, dimensions: &Dimensions, stdout: &mut RawTerminal<Stdout>) {
+fn print_frame_termion(frame: Grid, _dimensions: &Dimensions, stdout: &mut RawTerminal<Stdout>) {
     write!(stdout, "{}", termion::cursor::Goto(1, 1)).unwrap();
     stdout.flush().unwrap();
     for row in frame.iter() {
