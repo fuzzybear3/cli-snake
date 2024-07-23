@@ -36,12 +36,12 @@ struct Dimensions {
 }
 
 struct Location {
-    x: u32,
-    y: u32,
+    x: usize,
+    y: usize,
 }
 
 struct SnakeHead {
-    head: Location,
+    head_location: Location,
     direction: Move,
     body: LinkedList<Location>,
 }
@@ -49,9 +49,10 @@ struct SnakeHead {
 struct World {
     grid: Grid,
     food_loc: Location,
-    snake_head: SnakeHead,
+    snake: SnakeHead,
 }
 
+// row then column
 type Grid = Vec<Vec<GridPiece>>;
 const BOARDER_CHAR: char = '█';
 
@@ -88,7 +89,6 @@ fn main() {
         println!("Unable to get term size :(")
     }
 
-    // let map = Vec::new();
     let size: (usize, usize) = term_size::dimensions().unwrap();
     let dimensions = Dimensions {
         width: size.0,
@@ -102,14 +102,14 @@ fn main() {
 
     let grid = init_grid(&dimensions);
     let snake_head = SnakeHead {
-        head: Location { x: 5, y: 5 },
+        head_location: Location { x: 7, y: 7 },
         direction: Move::Up,
         body: LinkedList::new(),
     };
     let mut world = World {
         food_loc: Location { x: 3, y: 3 },
         grid,
-        snake_head,
+        snake: snake_head,
     };
 
     // Game loop
@@ -144,6 +144,7 @@ fn main() {
         let mut frame = init_grid(&dimensions);
 
         frame = draw_border(frame);
+        frame = draw_snake(frame, &world);
         // print_frame(frame, &dimensions);
 
         // write!(stdout, "{}", termion::cursor::Goto(5, 5)).unwrap();
@@ -153,6 +154,20 @@ fn main() {
         stdout.flush().unwrap();
         thread::sleep(time_step);
     }
+}
+
+fn draw_snake(mut frame: Grid, world: &World) -> Grid {
+    let head_loc = &world.snake.head_location;
+
+    frame[5][5].set_symble('X');
+    frame[head_loc.y][head_loc.x].set_symble('X');
+
+    // frame.get(head_loc.y.into()).unwrap();
+    // .get(head_loc.x)
+    // .unwrap()
+    // .set_symble("x");
+
+    frame
 }
 
 fn control_snake(action: Move, world: World) -> World {
