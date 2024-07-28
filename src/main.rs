@@ -40,7 +40,7 @@ struct Location {
     y: usize,
 }
 
-struct SnakeHead {
+struct Snake {
     head_location: Location,
     direction: Move,
     body: LinkedList<Location>,
@@ -49,7 +49,7 @@ struct SnakeHead {
 struct World {
     grid: Grid,
     food_loc: Location,
-    snake: SnakeHead,
+    snake: Snake,
 }
 
 // row then column
@@ -99,7 +99,7 @@ fn main() {
     let now = time::Instant::now();
 
     let grid = init_grid(&dimensions);
-    let snake_head = SnakeHead {
+    let snake_head = Snake {
         head_location: Location { x: 7, y: 7 },
         direction: Move::Up,
         body: LinkedList::new(),
@@ -115,7 +115,7 @@ fn main() {
         let action = read_move(&mut stdin);
 
         if let Some(Move::Exit) = action {
-            write!(stdout, "{}", termion::cursor::Show).unwrap();
+            write!(stdout, "{}{}", termion::cursor::Show, termion::clear::All).unwrap();
             return;
         }
 
@@ -124,10 +124,6 @@ fn main() {
         }
 
         let b = stdin.next();
-
-        if let Some(Ok(b'q')) = b {
-            break;
-        }
 
         if let Some(Ok(b'w')) = b {}
         write!(stdout, "{}", termion::cursor::Goto(1, 1),).unwrap();
@@ -150,18 +146,29 @@ fn main() {
 fn draw_snake(mut frame: Grid, world: &World) -> Grid {
     let head_loc = &world.snake.head_location;
 
-    frame[5][5].set_symble('X');
     frame[head_loc.y][head_loc.x].set_symble('X');
-
-    // frame.get(head_loc.y.into()).unwrap();
-    // .get(head_loc.x)
-    // .unwrap()
-    // .set_symble("x");
 
     frame
 }
 
-fn control_snake(action: Move, world: World) -> World {
+fn control_snake(action: Move, mut world: World) -> World {
+    let move_amount = 1;
+    match action {
+        Move::Left => {
+            world.snake.head_location.x -= move_amount;
+        }
+        Move::Right => {
+            world.snake.head_location.x += move_amount;
+        }
+        Move::Up => {
+            world.snake.head_location.y -= move_amount;
+        }
+        Move::Down => {
+            world.snake.head_location.y += move_amount;
+        }
+        _ => (),
+    }
+
     world
 }
 
