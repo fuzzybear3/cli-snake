@@ -63,10 +63,8 @@ fn main() {
 
     write!(
         stdout,
-        "{}{}q to exit. Type stuff, use alt, and so on.{}",
         // "{}{}q to exit. Type stuff, use alt, and so on.",
-        // "{}q to exit. Type stuff, use alt, and so on.{}",
-        termion::clear::All,
+        "{}q to exit. Type stuff, use alt, and so on.{}",
         termion::cursor::Goto(1, 1),
         termion::cursor::Hide
     )
@@ -114,11 +112,10 @@ fn main() {
 
     // Game loop
     loop {
-        write!(stdout, "{}", termion::clear::All);
-
         let action = read_move(&mut stdin);
 
         if let Some(Move::Exit) = action {
+            write!(stdout, "{}", termion::cursor::Show).unwrap();
             return;
         }
 
@@ -133,13 +130,7 @@ fn main() {
         }
 
         if let Some(Ok(b'w')) = b {}
-        write!(
-            stdout,
-            "{}{}",
-            termion::cursor::Goto(1, 1),
-            termion::clear::CurrentLine
-        )
-        .unwrap();
+        write!(stdout, "{}", termion::cursor::Goto(1, 1),).unwrap();
 
         let mut frame = init_grid(&dimensions);
 
