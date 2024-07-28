@@ -206,16 +206,7 @@ fn print_frame_termion(frame: Grid, _dimensions: &Dimensions, stdout: &mut RawTe
     stdout.flush().unwrap();
     for row in frame.iter() {
         for column in row.iter() {
-            // write!(stdout, "{}", BOARDER_CHAR).unwrap();
-            // stdout.flush().unwrap();
-
-            // stdout.write(format!('{}", column.symble)).unwrap();
-            //
             print!("{}", column.symble);
-
-            // stdout.write_all(b"#").unwrap();
-
-            // print!("{}", column.symble);
         }
         //* extra newline
         // println!();
