@@ -35,6 +35,7 @@ struct Dimensions {
     height: usize,
 }
 
+#[derive(Clone)]
 struct Location {
     x: usize,
     y: usize,
@@ -99,10 +100,14 @@ fn main() {
     let now = time::Instant::now();
 
     let grid = init_grid(&dimensions);
+    let mut body = LinkedList::new();
+    for i in 1..6 {
+        body.push_back(Location { x: 7, y: 7 + i });
+    }
     let snake_head = Snake {
         head_location: Location { x: 7, y: 7 },
         direction: Move::Up,
-        body: LinkedList::new(),
+        body,
     };
     let mut world = World {
         food_loc: Location { x: 3, y: 3 },
@@ -146,13 +151,25 @@ fn main() {
 fn draw_snake(mut frame: Grid, world: &World) -> Grid {
     let head_loc = &world.snake.head_location;
 
+    // draw head
     frame[head_loc.y][head_loc.x].set_symble('X');
+
+    // draw body
+    for node in world.snake.body.iter() {
+        frame[node.y][node.x].set_symble('X');
+    }
 
     frame
 }
 
 fn control_snake(action: Move, mut world: World) -> World {
     let move_amount = 1;
+
+    let last_node = world.snake.body.pop_back().unwrap();
+    world
+        .snake
+        .body
+        .push_front(world.snake.head_location.clone());
     match action {
         Move::Left => {
             world.snake.head_location.x -= move_amount;
@@ -209,7 +226,6 @@ fn print_frame_termion(frame: Grid, _dimensions: &Dimensions, stdout: &mut RawTe
             print!("{}", column.symble);
         }
         //* extra newline
-        // println!();
         stdout.write_all(b"\n\r").unwrap();
     }
     stdout.flush().unwrap();
