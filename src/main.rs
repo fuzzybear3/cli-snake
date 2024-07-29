@@ -125,8 +125,11 @@ fn main() {
         }
 
         if let Some(action) = action {
-            world = control_snake(action, world);
+            // world = control_snake(action, world);
+            world.snake.direction = action;
         }
+
+        world = advance_snake(world);
 
         let b = stdin.next();
 
@@ -162,10 +165,44 @@ fn draw_snake(mut frame: Grid, world: &World) -> Grid {
     frame
 }
 
-fn control_snake(action: Move, mut world: World) -> World {
+fn advance_snake(mut world: World) -> World {
     let move_amount = 1;
 
-    let last_node = world.snake.body.pop_back().unwrap();
+    // move head
+    match world.snake.direction {
+        Move::Left => {
+            world.snake.head_location.x -= move_amount;
+        }
+        Move::Right => {
+            world.snake.head_location.x += move_amount;
+        }
+        Move::Up => {
+            world.snake.head_location.y -= move_amount;
+        }
+        Move::Down => {
+            world.snake.head_location.y += move_amount;
+        }
+        _ => (),
+    }
+
+    // move body
+    world.snake.body.pop_back().unwrap();
+    world
+        .snake
+        .body
+        .push_front(world.snake.head_location.clone());
+    world
+}
+
+fn _control_snake(action: Move, mut world: World) -> World {
+    let move_amount = 1;
+
+    let _last_node = world.snake.body.pop_back().unwrap();
+    world
+        .snake
+        .body
+        .push_front(world.snake.head_location.clone());
+
     world
         .snake
         .body
