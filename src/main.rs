@@ -4,6 +4,7 @@ use std::{
     thread, time,
 };
 
+use rand::Rng;
 use std::io::{stdout, Read, Write};
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
@@ -50,13 +51,15 @@ struct Snake {
 
 struct World {
     grid: Grid,
-    food_loc: Location,
+    food_location: Location,
     snake: Snake,
 }
 
 // row then column
 type Grid = Vec<Vec<GridPiece>>;
 const BOARDER_CHAR: char = '█';
+const FOOD_CHAR: char = '*';
+const SNAKE_BODY: char = 'X';
 
 fn main() {
     // terminal setup
@@ -107,14 +110,16 @@ fn main() {
     }
     let snake_head = Snake {
         head_location: Location { x: 7, y: 7 },
-        direction: Move::Up,
+        direction: Move::Down,
         body,
     };
     let mut world = World {
-        food_loc: Location { x: 3, y: 3 },
+        food_location: Location { x: 3, y: 3 },
         grid,
         snake: snake_head,
     };
+
+    world = spawn_food(world, &dimensions);
 
     // Game loop
     loop {
@@ -137,6 +142,7 @@ fn main() {
 
         frame = draw_border(frame);
         frame = draw_snake(frame, &world);
+        frame = draw_food(frame, &world);
 
         print_frame_termion(frame, &dimensions, &mut stdout);
         stdout.flush().unwrap();
@@ -145,15 +151,30 @@ fn main() {
     }
 }
 
+fn draw_food(mut frame: Grid, world: &World) -> Grid {
+    frame[world.food_location.y][world.food_location.x].set_symble(FOOD_CHAR);
+    frame
+}
+
+fn spawn_food(mut world: World, dimensions: &Dimensions) -> World {
+    let mut rng = rand::thread_rng();
+    let x = rng.gen_range(1..dimensions.width);
+    let y = rng.gen_range(1..dimensions.height);
+    let random_location = Location { x, y };
+
+    world.food_location = random_location;
+    world
+}
+
 fn draw_snake(mut frame: Grid, world: &World) -> Grid {
     let head_loc = &world.snake.head_location;
 
     // draw head
-    frame[head_loc.y][head_loc.x].set_symble('X');
+    frame[head_loc.y][head_loc.x].set_symble(SNAKE_BODY);
 
     // draw body
     for node in world.snake.body.iter() {
-        frame[node.y][node.x].set_symble('X');
+        frame[node.y][node.x].set_symble(SNAKE_BODY);
     }
 
     frame
