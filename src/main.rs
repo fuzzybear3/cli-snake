@@ -11,6 +11,7 @@ use termion::{async_stdin, AsyncReader};
 use termion::{event::Key, raw::RawTerminal};
 
 use std::collections::LinkedList;
+#[derive(PartialEq)]
 
 enum Move {
     Left,
@@ -125,8 +126,8 @@ fn main() {
         }
 
         if let Some(action) = action {
-            // world = control_snake(action, world);
-            world.snake.direction = action;
+            world = control_snake(action, world);
+            // world.snake.direction = action;
         }
 
         world = advance_snake(world);
@@ -194,31 +195,27 @@ fn advance_snake(mut world: World) -> World {
     world
 }
 
-fn _control_snake(action: Move, mut world: World) -> World {
-    let move_amount = 1;
-
-    let _last_node = world.snake.body.pop_back().unwrap();
-    world
-        .snake
-        .body
-        .push_front(world.snake.head_location.clone());
-
-    world
-        .snake
-        .body
-        .push_front(world.snake.head_location.clone());
+fn control_snake(action: Move, mut world: World) -> World {
     match action {
         Move::Left => {
-            world.snake.head_location.x -= move_amount;
+            if world.snake.direction != Move::Right {
+                world.snake.direction = Move::Left;
+            }
         }
         Move::Right => {
-            world.snake.head_location.x += move_amount;
+            if world.snake.direction != Move::Left {
+                world.snake.direction = Move::Right;
+            }
         }
         Move::Up => {
-            world.snake.head_location.y -= move_amount;
+            if world.snake.direction != Move::Down {
+                world.snake.direction = Move::Up;
+            }
         }
         Move::Down => {
-            world.snake.head_location.y += move_amount;
+            if world.snake.direction != Move::Up {
+                world.snake.direction = Move::Down;
+            }
         }
         _ => (),
     }
