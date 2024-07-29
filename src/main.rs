@@ -121,33 +121,26 @@ fn main() {
         let action = read_move(&mut stdin);
 
         if let Some(Move::Exit) = action {
-            write!(stdout, "{}{}", termion::cursor::Show, termion::clear::All).unwrap();
+            write!(stdout, "{}{}", termion::clear::All, termion::cursor::Show).unwrap();
             return;
         }
 
         if let Some(action) = action {
             world = control_snake(action, world);
-            // world.snake.direction = action;
         }
 
         world = advance_snake(world);
 
-        let b = stdin.next();
-
-        if let Some(Ok(b'w')) = b {}
         write!(stdout, "{}", termion::cursor::Goto(1, 1),).unwrap();
 
         let mut frame = init_grid(&dimensions);
 
         frame = draw_border(frame);
         frame = draw_snake(frame, &world);
-        // print_frame(frame, &dimensions);
 
-        // write!(stdout, "{}", termion::cursor::Goto(5, 5)).unwrap();
-        // stdout.flush().unwrap();
         print_frame_termion(frame, &dimensions, &mut stdout);
-        // _print_frame(frame, &dimensions);
         stdout.flush().unwrap();
+
         thread::sleep(time_step);
     }
 }
