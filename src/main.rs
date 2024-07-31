@@ -6,14 +6,15 @@ use std::{
 
 use rand::Rng;
 use std::io::{stdout, Read, Write};
-use termion::input::TermRead;
+// use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::{async_stdin, AsyncReader};
-use termion::{event::Key, raw::RawTerminal};
+// use termion::event::Key;
+use termion::raw::RawTerminal;
 
 use std::collections::LinkedList;
-#[derive(PartialEq)]
 
+#[derive(PartialEq)]
 enum Move {
     Left,
     Right,
@@ -37,7 +38,7 @@ struct Dimensions {
     height: usize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 struct Location {
     x: usize,
     y: usize,
@@ -101,7 +102,7 @@ fn main() {
 
     // time setup
     let time_step = time::Duration::from_millis(100);
-    let now = time::Instant::now();
+    let _now = time::Instant::now();
 
     let grid = init_grid(&dimensions);
     let mut body = LinkedList::new();
@@ -119,7 +120,7 @@ fn main() {
         snake: snake_head,
     };
 
-    world = spawn_food(world, &dimensions);
+    world.food_location = gen_random_location(&dimensions);
 
     // Game loop
     loop {
@@ -134,7 +135,10 @@ fn main() {
             world = control_snake(action, world);
         }
 
-        world = advance_snake(world);
+        world = advance_snake(world, &dimensions);
+        // if world.food_location == world.snake.head_location {
+        //     world.food_location = gen_random_location(&dimensions);
+        // }
 
         write!(stdout, "{}", termion::cursor::Goto(1, 1),).unwrap();
 
@@ -151,19 +155,21 @@ fn main() {
     }
 }
 
+// fn check_collision()
+
+// fn feed_snake(mut world: World) -> world {}
+
 fn draw_food(mut frame: Grid, world: &World) -> Grid {
     frame[world.food_location.y][world.food_location.x].set_symble(FOOD_CHAR);
     frame
 }
 
-fn spawn_food(mut world: World, dimensions: &Dimensions) -> World {
+fn gen_random_location(dimensions: &Dimensions) -> Location {
+    //* don't spawn on snake
     let mut rng = rand::thread_rng();
     let x = rng.gen_range(1..dimensions.width);
     let y = rng.gen_range(1..dimensions.height);
-    let random_location = Location { x, y };
-
-    world.food_location = random_location;
-    world
+    Location { x, y }
 }
 
 fn draw_snake(mut frame: Grid, world: &World) -> Grid {
@@ -180,8 +186,21 @@ fn draw_snake(mut frame: Grid, world: &World) -> Grid {
     frame
 }
 
-fn advance_snake(mut world: World) -> World {
+fn advance_snake(mut world: World, dimensions: &Dimensions) -> World {
     let move_amount = 1;
+
+    // Check for food
+    if world.food_location == world.snake.head_location {
+        world.food_location = gen_random_location(dimensions);
+    } else {
+        // move snake tail
+        world.snake.body.pop_back().unwrap();
+    }
+
+    world
+        .snake
+        .body
+        .push_front(world.snake.head_location.clone());
 
     // move head
     match world.snake.direction {
@@ -200,12 +219,6 @@ fn advance_snake(mut world: World) -> World {
         _ => (),
     }
 
-    // move body
-    world.snake.body.pop_back().unwrap();
-    world
-        .snake
-        .body
-        .push_front(world.snake.head_location.clone());
     world
 }
 
@@ -324,6 +337,6 @@ mod tests {
         });
 
         assert_eq!(grid.len(), 14);
-        assert_eq!(grid.get(0).unwrap().len(), 5);
+        assert_eq!(grid.first().unwrap().len(), 5);
     }
 }
