@@ -48,10 +48,11 @@ struct Snake {
     head_location: Location,
     direction: Move,
     body: LinkedList<Location>,
+    food_in_belly: usize,
 }
 
 struct World {
-    grid: Grid,
+    _grid: Grid,
     food_location: Location,
     snake: Snake,
 }
@@ -60,7 +61,8 @@ struct World {
 type Grid = Vec<Vec<GridPiece>>;
 const BOARDER_CHAR: char = '█';
 const FOOD_CHAR: char = '*';
-const SNAKE_BODY: char = 'X';
+const SNAKE_BODY_CHAR: char = 'X';
+const GROW_AMOUNT: usize = 10;
 
 fn main() {
     // terminal setup
@@ -88,7 +90,6 @@ fn main() {
         )
         .unwrap();
         stdout.flush().unwrap();
-        // println!();
     } else {
         println!("Unable to get term size :(")
     }
@@ -113,10 +114,11 @@ fn main() {
         head_location: Location { x: 7, y: 7 },
         direction: Move::Down,
         body,
+        food_in_belly: 0,
     };
     let mut world = World {
         food_location: Location { x: 3, y: 3 },
-        grid,
+        _grid,
         snake: snake_head,
     };
 
@@ -136,9 +138,6 @@ fn main() {
         }
 
         world = advance_snake(world, &dimensions);
-        // if world.food_location == world.snake.head_location {
-        //     world.food_location = gen_random_location(&dimensions);
-        // }
 
         write!(stdout, "{}", termion::cursor::Goto(1, 1),).unwrap();
 
@@ -154,8 +153,6 @@ fn main() {
         thread::sleep(time_step);
     }
 }
-
-// fn check_collision()
 
 // fn feed_snake(mut world: World) -> world {}
 
@@ -176,11 +173,11 @@ fn draw_snake(mut frame: Grid, world: &World) -> Grid {
     let head_loc = &world.snake.head_location;
 
     // draw head
-    frame[head_loc.y][head_loc.x].set_symble(SNAKE_BODY);
+    frame[head_loc.y][head_loc.x].set_symble(SNAKE_BODY_CHAR);
 
     // draw body
     for node in world.snake.body.iter() {
-        frame[node.y][node.x].set_symble(SNAKE_BODY);
+        frame[node.y][node.x].set_symble(SNAKE_BODY_CHAR);
     }
 
     frame
@@ -192,9 +189,15 @@ fn advance_snake(mut world: World, dimensions: &Dimensions) -> World {
     // Check for food
     if world.food_location == world.snake.head_location {
         world.food_location = gen_random_location(dimensions);
-    } else {
+        world.snake.food_in_belly += GROW_AMOUNT;
+    }
+
+    if world.snake.food_in_belly == 0 {
         // move snake tail
         world.snake.body.pop_back().unwrap();
+    } else {
+        // grow tail
+        world.snake.food_in_belly -= 1;
     }
 
     world
@@ -326,7 +329,6 @@ fn init_grid(dimensions: &Dimensions) -> Grid {
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
 
     #[test]
