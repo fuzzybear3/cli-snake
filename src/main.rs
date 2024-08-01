@@ -110,7 +110,7 @@ fn main() {
     let grid = init_grid(&dimensions);
     let mut body = LinkedList::new();
     for i in 1..6 {
-        body.push_back(Location { x: 7, y: 7 + i });
+        body.push_back(Location { x: 6, y: 7 + i });
     }
     let snake_head = Snake {
         head_location: Location { x: 7, y: 7 },
@@ -168,6 +168,12 @@ fn check_collision(world: &World, dimensions: &Dimensions) {
 
     if head.y < 1 || head.y > dimensions.height - 2 * BOARDER_WIDTH {
         exit(0);
+    }
+
+    for node in world.snake.body.iter() {
+        if head == node {
+            exit(0);
+        }
     }
 }
 
