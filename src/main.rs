@@ -1,6 +1,7 @@
 // use std::vec;
 use std::{
     io::{Bytes, Stdout},
+    process::exit,
     thread, time,
 };
 
@@ -38,7 +39,7 @@ struct Dimensions {
     height: usize,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 struct Location {
     x: usize,
     y: usize,
@@ -63,6 +64,7 @@ const BOARDER_CHAR: char = '█';
 const FOOD_CHAR: char = '*';
 const SNAKE_BODY_CHAR: char = 'X';
 const GROW_AMOUNT: usize = 10;
+const BOARDER_WIDTH: usize = 1;
 
 fn main() {
     // terminal setup
@@ -118,7 +120,7 @@ fn main() {
     };
     let mut world = World {
         food_location: Location { x: 3, y: 3 },
-        _grid,
+        _grid: grid,
         snake: snake_head,
     };
 
@@ -138,6 +140,7 @@ fn main() {
         }
 
         world = advance_snake(world, &dimensions);
+        check_collision(&world, &dimensions);
 
         write!(stdout, "{}", termion::cursor::Goto(1, 1),).unwrap();
 
@@ -148,6 +151,7 @@ fn main() {
         frame = draw_food(frame, &world);
 
         print_frame_termion(frame, &dimensions, &mut stdout);
+        // println!("{:?}", world.snake.head_location);
         stdout.flush().unwrap();
 
         thread::sleep(time_step);
@@ -155,6 +159,17 @@ fn main() {
 }
 
 // fn feed_snake(mut world: World) -> world {}
+fn check_collision(world: &World, dimensions: &Dimensions) {
+    let head = &world.snake.head_location;
+
+    if head.x < 1 || head.x > dimensions.width - 2 * BOARDER_WIDTH {
+        exit(0);
+    }
+
+    if head.y < 1 || head.y > dimensions.height - 2 * BOARDER_WIDTH {
+        exit(0);
+    }
+}
 
 fn draw_food(mut frame: Grid, world: &World) -> Grid {
     frame[world.food_location.y][world.food_location.x].set_symble(FOOD_CHAR);
