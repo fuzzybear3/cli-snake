@@ -7,3 +7,9 @@ edition = "2021"
 rand = "0.8.5"
 term_size = "0.3.2"
 termion = "4.0.2"
+
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = true

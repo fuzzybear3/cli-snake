@@ -25,12 +25,12 @@ enum Move {
 }
 
 struct GridPiece {
-    symble: char,
+    symbol: char,
 }
 
 impl GridPiece {
     fn set_symble(&mut self, ch: char) {
-        self.symble = ch;
+        self.symbol = ch;
     }
 }
 
@@ -63,7 +63,7 @@ type Grid = Vec<Vec<GridPiece>>;
 const BOARDER_CHAR: char = '█';
 const FOOD_CHAR: char = '*';
 const SNAKE_BODY_CHAR: char = 'X';
-const GROW_AMOUNT: usize = 10;
+const GROW_AMOUNT: usize = 50;
 const BOARDER_WIDTH: usize = 1;
 
 fn main() {
@@ -186,7 +186,7 @@ fn gen_random_location(dimensions: &Dimensions) -> Location {
     //* don't spawn on snake
     let mut rng = rand::thread_rng();
     let x = rng.gen_range(1..dimensions.width);
-    let y = rng.gen_range(1..dimensions.height);
+    let y = rng.gen_range(1..dimensions.height - BOARDER_WIDTH);
     Location { x, y }
 }
 
@@ -296,7 +296,7 @@ fn read_move(stdin: &mut Bytes<AsyncReader>) -> Option<Move> {
 fn _print_frame(frame: Grid, _dimensions: &Dimensions) {
     for row in frame.iter() {
         for column in row.iter() {
-            print!("{}", column.symble);
+            print!("{}", column.symbol);
         }
         //* extra newline
         println!();
@@ -308,7 +308,7 @@ fn print_frame_termion(frame: Grid, _dimensions: &Dimensions, stdout: &mut RawTe
     stdout.flush().unwrap();
     for row in frame.iter() {
         for column in row.iter() {
-            print!("{}", column.symble);
+            print!("{}", column.symbol);
         }
         //* extra newline
         stdout.write_all(b"\n\r").unwrap();
@@ -340,7 +340,7 @@ fn init_grid(dimensions: &Dimensions) -> Grid {
     for _ in 0..dimensions.height {
         let mut row = Vec::new();
         for _ in 0..dimensions.width {
-            row.push(GridPiece { symble: ' ' })
+            row.push(GridPiece { symbol: ' ' })
         }
         grid.push(row);
     }
